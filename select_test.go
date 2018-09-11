@@ -1,4 +1,4 @@
-package ipns
+package dms3ns
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/ipfs/go-ipns/pb"
+	pb "github.com/dms3-fs/go-dms3ns/pb"
 
 	proto "github.com/gogo/protobuf/proto"
-	u "github.com/ipfs/go-ipfs-util"
-	ci "github.com/libp2p/go-libp2p-crypto"
+	u "github.com/dms3-fs/go-fs-util"
+	ci "github.com/dms3-p2p/go-p2p-crypto"
 )
 
-func shuffle(a []*pb.IpnsEntry) {
+func shuffle(a []*pb.Dms3NsEntry) {
 	for n := 0; n < 5; n++ {
 		for i, _ := range a {
 			j := rand.Intn(len(a))
@@ -22,7 +22,7 @@ func shuffle(a []*pb.IpnsEntry) {
 	}
 }
 
-func AssertSelected(r *pb.IpnsEntry, from ...*pb.IpnsEntry) error {
+func AssertSelected(r *pb.Dms3NsEntry, from ...*pb.Dms3NsEntry) error {
 	shuffle(from)
 	var vals [][]byte
 	for _, r := range from {

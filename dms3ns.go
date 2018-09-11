@@ -1,31 +1,31 @@
-package ipns
+package dms3ns
 
 import (
 	"bytes"
 	"fmt"
 	"time"
 
-	pb "github.com/ipfs/go-ipns/pb"
+	pb "github.com/dms3-fs/go-dms3ns/pb"
 
-	u "github.com/ipfs/go-ipfs-util"
-	ic "github.com/libp2p/go-libp2p-crypto"
-	peer "github.com/libp2p/go-libp2p-peer"
+	u "github.com/dms3-fs/go-fs-util"
+	ic "github.com/dms3-p2p/go-p2p-crypto"
+	peer "github.com/dms3-p2p/go-p2p-peer"
 )
 
-// Create creates a new IPNS entry and signs it with the given private key.
+// Create creates a new DMS3NS entry and signs it with the given private key.
 //
 // This function does not embed the public key. If you want to do that, use
 // `EmbedPublicKey`.
-func Create(sk ic.PrivKey, val []byte, seq uint64, eol time.Time) (*pb.IpnsEntry, error) {
-	entry := new(pb.IpnsEntry)
+func Create(sk ic.PrivKey, val []byte, seq uint64, eol time.Time) (*pb.Dms3NsEntry, error) {
+	entry := new(pb.Dms3NsEntry)
 
 	entry.Value = val
-	typ := pb.IpnsEntry_EOL
+	typ := pb.Dms3NsEntry_EOL
 	entry.ValidityType = &typ
 	entry.Sequence = &seq
 	entry.Validity = []byte(u.FormatRFC3339(eol))
 
-	sig, err := sk.Sign(ipnsEntryDataForSig(entry))
+	sig, err := sk.Sign(dms3nsEntryDataForSig(entry))
 	if err != nil {
 		return nil, err
 	}
@@ -34,10 +34,10 @@ func Create(sk ic.PrivKey, val []byte, seq uint64, eol time.Time) (*pb.IpnsEntry
 	return entry, nil
 }
 
-// Validates validates the given IPNS entry against the given public key.
-func Validate(pk ic.PubKey, entry *pb.IpnsEntry) error {
-	// Check the ipns record signature with the public key
-	if ok, err := pk.Verify(ipnsEntryDataForSig(entry), entry.GetSignature()); err != nil || !ok {
+// Validates validates the given DMS3NS entry against the given public key.
+func Validate(pk ic.PubKey, entry *pb.Dms3NsEntry) error {
+	// Check the dms3ns record signature with the public key
+	if ok, err := pk.Verify(dms3nsEntryDataForSig(entry), entry.GetSignature()); err != nil || !ok {
 		return ErrSignature
 	}
 
@@ -51,22 +51,22 @@ func Validate(pk ic.PubKey, entry *pb.IpnsEntry) error {
 	return nil
 }
 
-// GetEOL returns the EOL of this IPNS entry
+// GetEOL returns the EOL of this DMS3NS entry
 //
 // This function returns ErrUnrecognizedValidity if the validity type of the
 // record isn't EOL. Otherwise, it returns an error if it can't parse the EOL.
-func GetEOL(entry *pb.IpnsEntry) (time.Time, error) {
-	if entry.GetValidityType() != pb.IpnsEntry_EOL {
+func GetEOL(entry *pb.Dms3NsEntry) (time.Time, error) {
+	if entry.GetValidityType() != pb.Dms3NsEntry_EOL {
 		return time.Time{}, ErrUnrecognizedValidity
 	}
 	return u.ParseRFC3339(string(entry.GetValidity()))
 }
 
-// EmbedPublicKey embeds the given public key in the given ipns entry. While not
-// strictly required, some nodes (e.g., DHT servers) may reject IPNS entries
+// EmbedPublicKey embeds the given public key in the given dms3ns entry. While not
+// strictly required, some nodes (e.g., DHT servers) may reject DMS3NS entries
 // that don't embed their public keys as they may not be able to validate them
 // efficiently.
-func EmbedPublicKey(pk ic.PubKey, entry *pb.IpnsEntry) error {
+func EmbedPublicKey(pk ic.PubKey, entry *pb.Dms3NsEntry) error {
 	// Try extracting the public key from the ID. If we can, *don't* embed
 	// it.
 	id, err := peer.IDFromPublicKey(pk)
@@ -91,12 +91,12 @@ func EmbedPublicKey(pk ic.PubKey, entry *pb.IpnsEntry) error {
 	return nil
 }
 
-// ExtractPublicKey extracts a public key matching `pid` from the IPNS record,
+// ExtractPublicKey extracts a public key matching `pid` from the DMS3NS record,
 // if possible.
 //
 // This function returns (nil, nil) when no public key can be extracted and
 // nothing is malformed.
-func ExtractPublicKey(pid peer.ID, entry *pb.IpnsEntry) (ic.PubKey, error) {
+func ExtractPublicKey(pid peer.ID, entry *pb.Dms3NsEntry) (ic.PubKey, error) {
 	if entry.PubKey != nil {
 		pk, err := ic.UnmarshalPublicKey(entry.PubKey)
 		if err != nil {
@@ -117,7 +117,7 @@ func ExtractPublicKey(pid peer.ID, entry *pb.IpnsEntry) (ic.PubKey, error) {
 	return pid.ExtractPublicKey()
 }
 
-// Compare compares two IPNS entries. It returns:
+// Compare compares two DMS3NS entries. It returns:
 //
 // * -1 if a is older than b
 // * 0 if a and b cannot be ordered (this doesn't mean that they are equal)
@@ -130,9 +130,9 @@ func ExtractPublicKey(pid peer.ID, entry *pb.IpnsEntry) (ic.PubKey, error) {
 //
 // NOTE: If a and b cannot be ordered by this function, you can determine their
 // order by comparing their serialized byte representations (using
-// `bytes.Compare`). You must do this if you are implementing a libp2p record
+// `bytes.Compare`). You must do this if you are implementing a dms3-p2p record
 // validator (or you can just use the one provided for you by this package).
-func Compare(a, b *pb.IpnsEntry) (int, error) {
+func Compare(a, b *pb.Dms3NsEntry) (int, error) {
 	as := a.GetSequence()
 	bs := b.GetSequence()
 
@@ -161,7 +161,7 @@ func Compare(a, b *pb.IpnsEntry) (int, error) {
 	return 0, nil
 }
 
-func ipnsEntryDataForSig(e *pb.IpnsEntry) []byte {
+func dms3nsEntryDataForSig(e *pb.Dms3NsEntry) []byte {
 	return bytes.Join([][]byte{
 		e.Value,
 		e.Validity,

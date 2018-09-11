@@ -3,11 +3,11 @@ package examples_test
 import (
 	"testing"
 
-	"github.com/ipfs/go-ipns/examples"
-	crypto "github.com/libp2p/go-libp2p-crypto"
+	"github.com/dms3-fs/go-dms3ns/examples"
+	crypto "github.com/dms3-p2p/go-p2p-crypto"
 )
 
-var testPath = "/ipfs/Qme1knMqwt1hKZbc1BmQFmnm9f36nyQGwXxPGVpVJ9rMK5"
+var testPath = "/dms3fs/Qme1knMqwt1hKZbc1BmQFmnm9f36nyQGwXxPGVpVJ9rMK5"
 
 func TestKeyGeneration(t *testing.T) {
 	_, err := generateRSAKey()

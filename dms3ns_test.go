@@ -1,13 +1,13 @@
-package ipns
+package dms3ns
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	u "github.com/ipfs/go-ipfs-util"
-	ci "github.com/libp2p/go-libp2p-crypto"
-	peer "github.com/libp2p/go-libp2p-peer"
+	u "github.com/dms3-fs/go-fs-util"
+	ci "github.com/dms3-p2p/go-p2p-crypto"
+	peer "github.com/dms3-p2p/go-p2p-peer"
 )
 
 func TestEmbedPublicKey(t *testing.T) {
@@ -44,20 +44,20 @@ func TestEmbedPublicKey(t *testing.T) {
 }
 
 func ExampleCreate() {
-	// Generate a private key to sign the IPNS record with. Most of the time,
-	// however, you'll want to retrieve an already-existing key from IPFS using
-	// go-ipfs/core/coreapi CoreAPI.KeyAPI() interface.
+	// Generate a private key to sign the DMS3NS record with. Most of the time,
+	// however, you'll want to retrieve an already-existing key from DMS3FS using
+	// go-dms3-fs/core/coreapi CoreAPI.KeyAPI() interface.
 	privateKey, _, err := ci.GenerateKeyPair(ci.RSA, 2048)
 	if err != nil {
 		panic(err)
 	}
 
-	// Create an IPNS record that expires in one hour and points to the IPFS address
-	// /ipfs/Qme1knMqwt1hKZbc1BmQFmnm9f36nyQGwXxPGVpVJ9rMK5
-	ipnsRecord, err := Create(privateKey, []byte("/ipfs/Qme1knMqwt1hKZbc1BmQFmnm9f36nyQGwXxPGVpVJ9rMK5"), 0, time.Now().Add(1*time.Hour))
+	// Create an DMS3NS record that expires in one hour and points to the DMS3FS address
+	// /dms3fs/Qme1knMqwt1hKZbc1BmQFmnm9f36nyQGwXxPGVpVJ9rMK5
+	dms3nsRecord, err := Create(privateKey, []byte("/dms3fs/Qme1knMqwt1hKZbc1BmQFmnm9f36nyQGwXxPGVpVJ9rMK5"), 0, time.Now().Add(1*time.Hour))
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(ipnsRecord)
+	fmt.Println(dms3nsRecord)
 }

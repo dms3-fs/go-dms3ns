@@ -1,10 +1,10 @@
 {
   "author": "stebalien",
   "bugs": {
-    "url": "https://github.com/ipfs/go-ipns/issues"
+    "url": "https://github.com/dms3-fs/go-dms3ns/issues"
   },
   "gx": {
-    "dvcsimport": "github.com/ipfs/go-ipns"
+    "dvcsimport": "github.com/dms3-fs/go-dms3ns"
   },
   "gxDependencies": [
     {
@@ -55,4 +55,3 @@
   "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
   "version": "0.1.7"
 }
-

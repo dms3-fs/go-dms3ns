@@ -1,4 +1,4 @@
-package ipns
+package dms3ns
 
 import (
 	"fmt"
@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/ipfs/go-ipns/pb"
+	pb "github.com/dms3-fs/go-dms3ns/pb"
 
 	proto "github.com/gogo/protobuf/proto"
-	u "github.com/ipfs/go-ipfs-util"
-	ci "github.com/libp2p/go-libp2p-crypto"
-	peer "github.com/libp2p/go-libp2p-peer"
-	pstore "github.com/libp2p/go-libp2p-peerstore"
+	u "github.com/dms3-fs/go-fs-util"
+	ci "github.com/dms3-p2p/go-p2p-crypto"
+	peer "github.com/dms3-p2p/go-p2p-peer"
+	pstore "github.com/dms3-p2p/go-p2p-peerstore"
 )
 
 func testValidatorCase(t *testing.T, priv ci.PrivKey, kbook pstore.KeyBook, key string, val []byte, eol time.Time, exp error) {
@@ -42,7 +42,7 @@ func testValidatorCaseMatchFunc(t *testing.T, priv ci.PrivKey, kbook pstore.KeyB
 
 	data := val
 	if data == nil {
-		p := []byte("/ipfs/QmfM2r8seH2GiRaC4esTjeraXEachRt8ZsSeGaWTPLyMoG")
+		p := []byte("/dms3fs/QmfM2r8seH2GiRaC4esTjeraXEachRt8ZsSeGaWTPLyMoG")
 		entry, err := Create(priv, p, 1, eol)
 		if err != nil {
 			t.Fatal(err)
@@ -66,18 +66,18 @@ func TestValidator(t *testing.T) {
 	kbook.AddPubKey(id, priv.GetPublic())
 	emptyKbook := pstore.NewPeerstore()
 
-	testValidatorCase(t, priv, kbook, "/ipns/"+string(id), nil, ts.Add(time.Hour), nil)
-	testValidatorCase(t, priv, kbook, "/ipns/"+string(id), nil, ts.Add(time.Hour*-1), ErrExpiredRecord)
-	testValidatorCase(t, priv, kbook, "/ipns/"+string(id), []byte("bad data"), ts.Add(time.Hour), ErrBadRecord)
-	testValidatorCase(t, priv, kbook, "/ipns/"+"bad key", nil, ts.Add(time.Hour), ErrKeyFormat)
-	testValidatorCase(t, priv, emptyKbook, "/ipns/"+string(id), nil, ts.Add(time.Hour), ErrPublicKeyNotFound)
-	testValidatorCase(t, priv2, kbook, "/ipns/"+string(id2), nil, ts.Add(time.Hour), ErrPublicKeyNotFound)
-	testValidatorCase(t, priv2, kbook, "/ipns/"+string(id), nil, ts.Add(time.Hour), ErrSignature)
+	testValidatorCase(t, priv, kbook, "/dms3ns/"+string(id), nil, ts.Add(time.Hour), nil)
+	testValidatorCase(t, priv, kbook, "/dms3ns/"+string(id), nil, ts.Add(time.Hour*-1), ErrExpiredRecord)
+	testValidatorCase(t, priv, kbook, "/dms3ns/"+string(id), []byte("bad data"), ts.Add(time.Hour), ErrBadRecord)
+	testValidatorCase(t, priv, kbook, "/dms3ns/"+"bad key", nil, ts.Add(time.Hour), ErrKeyFormat)
+	testValidatorCase(t, priv, emptyKbook, "/dms3ns/"+string(id), nil, ts.Add(time.Hour), ErrPublicKeyNotFound)
+	testValidatorCase(t, priv2, kbook, "/dms3ns/"+string(id2), nil, ts.Add(time.Hour), ErrPublicKeyNotFound)
+	testValidatorCase(t, priv2, kbook, "/dms3ns/"+string(id), nil, ts.Add(time.Hour), ErrSignature)
 	testValidatorCase(t, priv, kbook, "//"+string(id), nil, ts.Add(time.Hour), ErrInvalidPath)
 	testValidatorCase(t, priv, kbook, "/wrong/"+string(id), nil, ts.Add(time.Hour), ErrInvalidPath)
 }
 
-func mustMarshal(t *testing.T, entry *pb.IpnsEntry) []byte {
+func mustMarshal(t *testing.T, entry *pb.Dms3NsEntry) []byte {
 	t.Helper()
 	data, err := proto.Marshal(entry)
 	if err != nil {
@@ -90,16 +90,16 @@ func TestEmbeddedPubKeyValidate(t *testing.T) {
 	goodeol := time.Now().Add(time.Hour)
 	kbook := pstore.NewPeerstore()
 
-	pth := []byte("/ipfs/QmfM2r8seH2GiRaC4esTjeraXEachRt8ZsSeGaWTPLyMoG")
+	pth := []byte("/dms3fs/QmfM2r8seH2GiRaC4esTjeraXEachRt8ZsSeGaWTPLyMoG")
 
-	priv, _, ipnsk := genKeys(t)
+	priv, _, dms3nsk := genKeys(t)
 
 	entry, err := Create(priv, pth, 1, goodeol)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	testValidatorCase(t, priv, kbook, ipnsk, mustMarshal(t, entry), goodeol, ErrPublicKeyNotFound)
+	testValidatorCase(t, priv, kbook, dms3nsk, mustMarshal(t, entry), goodeol, ErrPublicKeyNotFound)
 
 	pubkb, err := priv.GetPublic().Bytes()
 	if err != nil {
@@ -107,10 +107,10 @@ func TestEmbeddedPubKeyValidate(t *testing.T) {
 	}
 
 	entry.PubKey = pubkb
-	testValidatorCase(t, priv, kbook, ipnsk, mustMarshal(t, entry), goodeol, nil)
+	testValidatorCase(t, priv, kbook, dms3nsk, mustMarshal(t, entry), goodeol, nil)
 
 	entry.PubKey = []byte("probably not a public key")
-	testValidatorCaseMatchFunc(t, priv, kbook, ipnsk, mustMarshal(t, entry), goodeol, func(t *testing.T, err error) {
+	testValidatorCaseMatchFunc(t, priv, kbook, dms3nsk, mustMarshal(t, entry), goodeol, func(t *testing.T, err error) {
 		if !strings.Contains(err.Error(), "unmarshaling pubkey in record:") {
 			t.Fatal("expected pubkey unmarshaling to fail")
 		}
@@ -123,14 +123,14 @@ func TestEmbeddedPubKeyValidate(t *testing.T) {
 	}
 
 	entry.PubKey = wrongkeydata
-	testValidatorCase(t, priv, kbook, ipnsk, mustMarshal(t, entry), goodeol, ErrPublicKeyMismatch)
+	testValidatorCase(t, priv, kbook, dms3nsk, mustMarshal(t, entry), goodeol, ErrPublicKeyMismatch)
 }
 
 func TestPeerIDPubKeyValidate(t *testing.T) {
 	goodeol := time.Now().Add(time.Hour)
 	kbook := pstore.NewPeerstore()
 
-	pth := []byte("/ipfs/QmfM2r8seH2GiRaC4esTjeraXEachRt8ZsSeGaWTPLyMoG")
+	pth := []byte("/dms3fs/QmfM2r8seH2GiRaC4esTjeraXEachRt8ZsSeGaWTPLyMoG")
 
 	sk, pk, err := ci.GenerateEd25519Key(rand.New(rand.NewSource(42)))
 	if err != nil {
@@ -142,7 +142,7 @@ func TestPeerIDPubKeyValidate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ipnsk := "/ipns/" + string(pid)
+	dms3nsk := "/dms3ns/" + string(pid)
 
 	entry, err := Create(sk, pth, 1, goodeol)
 	if err != nil {
@@ -154,7 +154,7 @@ func TestPeerIDPubKeyValidate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testValidatorCase(t, sk, kbook, ipnsk, dataNoKey, goodeol, nil)
+	testValidatorCase(t, sk, kbook, dms3nsk, dataNoKey, goodeol, nil)
 }
 
 func genKeys(t *testing.T) (ci.PrivKey, peer.ID, string) {
@@ -169,7 +169,7 @@ func genKeys(t *testing.T) (ci.PrivKey, peer.ID, string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ipnsKey := RecordKey(pid)
+	dms3nsKey := RecordKey(pid)
 
-	return priv, pid, ipnsKey
+	return priv, pid, dms3nsKey
 }

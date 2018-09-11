@@ -1,8 +1,8 @@
 syntax = "proto2";
 
-package ipns.pb;
+package dms3ns.pb;
 
-message IpnsEntry {
+message Dms3NsEntry {
 	enum ValidityType {
 		// setting an EOL says "this record is valid until..."
 		EOL = 0;
